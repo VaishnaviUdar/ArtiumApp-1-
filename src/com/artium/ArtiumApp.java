@@ -65,7 +65,7 @@ public class ArtiumApp extends JFrame {
 
         center.add(Box.createVerticalStrut(40));
 
-        ImageIcon icon = new ImageIcon("src/images/Artium.png");
+        ImageIcon icon = new ImageIcon(getClass().getResource("/images/Artium.png"));
         Image img = icon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
         JLabel logo = new JLabel(new ImageIcon(img));
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -271,6 +271,7 @@ public class ArtiumApp extends JFrame {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
+
                 int id = rs.getInt("id");
                 String name = rs.getString("name");
                 String type = rs.getString("type");
@@ -278,6 +279,13 @@ public class ArtiumApp extends JFrame {
                 String price = rs.getString("price");
                 String path = rs.getString("image_path");
 
+                // ✅ FIRST create card
+                JPanel card = new JPanel();
+                card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+                card.setBackground(Color.WHITE);
+                card.setPreferredSize(new Dimension(180, 350));
+
+                // ✅ THEN image code
                 ImageIcon icon;
                 File imgFile = new File(path);
 
@@ -287,10 +295,40 @@ public class ArtiumApp extends JFrame {
                     icon = new ImageIcon();
                 }
 
-                Image img = icon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
-                JLabel imgLabel = new JLabel(new ImageIcon(img));
+                Image smallImg = icon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+                Image largeImg = icon.getImage().getScaledInstance(300, 300, Image.SCALE_SMOOTH);
 
-                JPanel card = new JPanel();
+                JLabel imgLabel = new JLabel(new ImageIcon(smallImg));
+                imgLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                imgLabel.addMouseListener(new MouseAdapter() {
+                    JFrame popup = null;
+
+                    public void mouseClicked(MouseEvent e) {
+
+                        if (popup != null && popup.isVisible()) {
+                            popup.dispose();
+                            popup = null;
+                            return;
+                        }
+
+                        popup = new JFrame();
+                        popup.setTitle(name);
+                        popup.setSize(500, 500);
+                        popup.setLocationRelativeTo(null);
+
+                        ImageIcon largeIcon = new ImageIcon(
+                                icon.getImage().getScaledInstance(450, 450, Image.SCALE_SMOOTH)
+                        );
+
+                        JLabel lbl = new JLabel(largeIcon);
+                        lbl.setHorizontalAlignment(JLabel.CENTER);
+
+                        popup.add(lbl);
+                        popup.setVisible(true);
+                    }
+                });
+                
                 card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
                 card.setBackground(Color.WHITE);
                 card.setPreferredSize(new Dimension(180, 350));
@@ -302,6 +340,85 @@ public class ArtiumApp extends JFrame {
 
                 JButton updateBtn = new JButton("Update");
                 JButton deleteBtn = new JButton("Delete");
+                
+                deleteBtn.addActionListener(e -> {
+                    int confirm = JOptionPane.showConfirmDialog(this, "Delete this artwork?");
+                    
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        try {
+                            PreparedStatement ps2 = con.prepareStatement("DELETE FROM artworks WHERE id=?");
+                            ps2.setInt(1, id);
+                            ps2.executeUpdate();
+
+                            JOptionPane.showMessageDialog(this, "Deleted!");
+                            refreshGallery(""); // reload gallery
+
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+                
+                final int artworkId = id;
+
+                updateBtn.addActionListener(e -> {
+
+                    JTextField nameField = new JTextField(name);
+                    JTextField typeField = new JTextField(type);
+                    JTextField artistField = new JTextField(artist);
+                    JTextField priceField = new JTextField(price);
+
+                    JPanel panel = new JPanel(new GridLayout(0, 1));
+
+                    panel.add(new JLabel("Artwork Name:"));
+                    panel.add(nameField);
+
+                    panel.add(new JLabel("Type:"));
+                    panel.add(typeField);
+
+                    panel.add(new JLabel("Artist:"));
+                    panel.add(artistField);
+
+                    panel.add(new JLabel("Price:"));
+                    panel.add(priceField);
+
+                    int result = JOptionPane.showConfirmDialog(
+                            ArtiumApp.this,
+                            panel,
+                            "Update Artwork",
+                            JOptionPane.OK_CANCEL_OPTION,
+                            JOptionPane.PLAIN_MESSAGE
+                    );
+
+                    if (result == JOptionPane.OK_OPTION) {
+                        try {
+                            PreparedStatement ps3 = con.prepareStatement(
+                                "UPDATE artworks SET name=?, type=?, artist=?, price=? WHERE id=?"
+                            );
+
+                            ps3.setString(1, nameField.getText().trim());
+                            ps3.setString(2, typeField.getText().trim());
+                            ps3.setString(3, artistField.getText().trim());
+                            ps3.setDouble(4, Double.parseDouble(priceField.getText().trim()));
+                            ps3.setInt(5, artworkId);
+
+                            int rows = ps3.executeUpdate();
+
+                            if (rows > 0) {
+                                JOptionPane.showMessageDialog(ArtiumApp.this, "Updated successfully!");
+                                refreshGallery("");
+                            } else {
+                                JOptionPane.showMessageDialog(ArtiumApp.this, "Update failed!");
+                            }
+
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(ArtiumApp.this, "Invalid input!");
+                        }
+                    }
+                });
+                
+                
 
                 card.add(imgLabel);
                 card.add(nameLbl);
@@ -309,6 +426,7 @@ public class ArtiumApp extends JFrame {
                 card.add(artistLbl);
                 card.add(priceLbl);
                 card.add(updateBtn);
+                card.add(Box.createVerticalStrut(10)); // 👉 space between buttons
                 card.add(deleteBtn);
 
                 galleryPanel.add(card);
