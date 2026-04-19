@@ -10,13 +10,11 @@ public class ArtiumApp extends JFrame {
 
     CardLayout cl;
     JPanel mainPanel, galleryPanel;
-    
 
     Connection con = DBConnection.getConnection();
     String selectedImagePath = "";
 
     public ArtiumApp() {
-
         setTitle("Artium");
         setSize(1000, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -34,28 +32,23 @@ public class ArtiumApp extends JFrame {
     }
 
     private JPanel homePage() {
-
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
 
-        // ================= TOP BAR =================
         JPanel topBar = new JPanel(new GridLayout(1, 3));
         topBar.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         topBar.setBackground(Color.WHITE);
 
-        // LEFT
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         leftPanel.setBackground(Color.WHITE);
         JButton addBtn = new JButton("+ Add Artwork");
         leftPanel.add(addBtn);
 
-        // CENTER
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         centerPanel.setBackground(Color.WHITE);
         JButton searchIcon = new JButton("🔍");
         centerPanel.add(searchIcon);
 
-        // RIGHT
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightPanel.setBackground(Color.WHITE);
         JButton menuBtn = new JButton("≡");
@@ -64,60 +57,57 @@ public class ArtiumApp extends JFrame {
         topBar.add(leftPanel);
         topBar.add(centerPanel);
         topBar.add(rightPanel);
-
         panel.add(topBar, BorderLayout.NORTH);
 
-        // ================= CENTER CONTENT =================
         JPanel center = new JPanel();
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
         center.setBackground(Color.WHITE);
 
         center.add(Box.createVerticalStrut(40));
 
-        // ===== LOGO =====
         ImageIcon icon = new ImageIcon("src/images/Artium.png");
         Image img = icon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
         JLabel logo = new JLabel(new ImageIcon(img));
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        center.add(logo);
 
+        center.add(logo);
         center.add(Box.createVerticalStrut(20));
 
-        // ===== TITLE =====
         JLabel title = new JLabel("ARTIUM");
         title.setFont(new Font("Serif", Font.BOLD, 90));
         title.setForeground(new Color(230, 60, 30));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        center.add(title);
 
+        center.add(title);
         center.add(Box.createVerticalStrut(30));
 
-        // ===== VIEW GALLERY BUTTON =====
         JButton galleryBtn = new JButton("View Gallery →");
         galleryBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         center.add(galleryBtn);
 
         panel.add(center, BorderLayout.CENTER);
 
-        // ================= MENU =================
         JPopupMenu menu = new JPopupMenu();
-        menu.add("Paintings");
-        menu.add("Sketches");
-        menu.add("Digital Art");
+        JPanel menuPanel = new JPanel();
+        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
+        menuPanel.setBackground(Color.WHITE);
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        menuBtn.addActionListener(e -> menu.show(menuBtn, 0, menuBtn.getHeight()));
+        menuBtn.addActionListener(e -> {
+            loadMenuTypes(menuPanel);
+            menu.removeAll();
+            menu.add(menuPanel);
+            menu.show(menuBtn, 0, menuBtn.getHeight());
+        });
 
-        // ================= SEARCH =================
         searchIcon.addActionListener(e -> {
             String text = JOptionPane.showInputDialog(this, "Search artwork / artist / type:");
-
             if (text != null && !text.isEmpty()) {
                 refreshGallery(text);
                 cl.show(mainPanel, "GALLERY");
             }
         });
 
-        // ================= NAVIGATION =================
         addBtn.addActionListener(e -> cl.show(mainPanel, "ADD"));
 
         galleryBtn.addActionListener(e -> {
@@ -127,77 +117,80 @@ public class ArtiumApp extends JFrame {
 
         return panel;
     }
-    // ================= ADD ARTWORK =================
-    private JPanel addArtworkPage() {
 
-        JPanel panel = new JPanel(null);
+    private JPanel addArtworkPage() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel title = new JLabel("Add Artwork");
-        title.setBounds(400, 20, 200, 30);
-        title.setFont(new Font("Arial", Font.BOLD, 18));
-        panel.add(title);
+        title.setFont(new Font("Arial", Font.BOLD, 20));
 
-        // ===== LABELS =====
         JLabel nameLbl = new JLabel("Artwork Name:");
-        nameLbl.setBounds(250, 80, 150, 25);
-        panel.add(nameLbl);
-
         JLabel typeLbl = new JLabel("Type:");
-        typeLbl.setBounds(250, 130, 150, 25);
-        panel.add(typeLbl);
-
         JLabel artistLbl = new JLabel("Artist:");
-        artistLbl.setBounds(250, 180, 150, 25);
-        panel.add(artistLbl);
-
         JLabel priceLbl = new JLabel("Price:");
-        priceLbl.setBounds(250, 230, 150, 25);
-        panel.add(priceLbl);
-
         JLabel imgLbl = new JLabel("Image:");
-        imgLbl.setBounds(250, 280, 150, 25);
-        panel.add(imgLbl);
 
-        // ===== FIELDS =====
-        JTextField name = new JTextField();
-        name.setBounds(400, 80, 250, 30);
-        panel.add(name);
+        JTextField name = new JTextField(20);
+        JTextField type = new JTextField(20);
+        JTextField artist = new JTextField(20);
+        JTextField price = new JTextField(20);
 
-        JTextField type = new JTextField();
-        type.setBounds(400, 130, 250, 30);
-        panel.add(type);
-
-        JTextField artist = new JTextField();
-        artist.setBounds(400, 180, 250, 30);
-        panel.add(artist);
-
-        JTextField price = new JTextField();
-        price.setBounds(400, 230, 250, 30);
-        panel.add(price);
-
-        // ===== IMAGE UPLOAD =====
         JButton upload = new JButton("Upload");
-        upload.setBounds(400, 280, 120, 30);
-        panel.add(upload);
-
         JLabel imageName = new JLabel("No file selected");
-        imageName.setBounds(530, 280, 200, 30);
-        panel.add(imageName);
 
-        // ===== BUTTONS =====
         JButton submit = new JButton("Submit");
-        submit.setBounds(400, 350, 120, 40);
-        panel.add(submit);
-
         JButton back = new JButton("← Back");
-        back.setBounds(30, 20, 100, 30);
-        panel.add(back);
 
-        // ===== IMAGE UPLOAD LOGIC =====
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(title, gbc);
+
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(nameLbl, gbc);
+        gbc.gridx = 1;
+        panel.add(name, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(typeLbl, gbc);
+        gbc.gridx = 1;
+        panel.add(type, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(artistLbl, gbc);
+        gbc.gridx = 1;
+        panel.add(artist, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(priceLbl, gbc);
+        gbc.gridx = 1;
+        panel.add(price, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 5;
+        panel.add(imgLbl, gbc);
+        gbc.gridx = 1;
+        panel.add(upload, gbc);
+
+        gbc.gridy = 6;
+        panel.add(imageName, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        panel.add(submit, gbc);
+
+        gbc.gridy = 8;
+        panel.add(back, gbc);
+
         upload.addActionListener(e -> {
             JFileChooser chooser = new JFileChooser();
             int res = chooser.showOpenDialog(this);
-
             if (res == JFileChooser.APPROVE_OPTION) {
                 File file = chooser.getSelectedFile();
                 selectedImagePath = file.getAbsolutePath();
@@ -205,11 +198,11 @@ public class ArtiumApp extends JFrame {
             }
         });
 
-        // ===== SAVE TO DATABASE =====
         submit.addActionListener(e -> {
             try {
                 PreparedStatement ps = con.prepareStatement(
-                        "INSERT INTO artworks(name,type,artist,price,image_path) VALUES(?,?,?,?,?)");
+                        "INSERT INTO artworks(name,type,artist,price,image_path) VALUES(?,?,?,?,?)"
+                );
 
                 ps.setString(1, name.getText());
                 ps.setString(2, type.getText());
@@ -218,7 +211,6 @@ public class ArtiumApp extends JFrame {
                 ps.setString(5, selectedImagePath);
 
                 ps.executeUpdate();
-
                 JOptionPane.showMessageDialog(this, "Saved Successfully!");
 
             } catch (Exception ex) {
@@ -230,24 +222,20 @@ public class ArtiumApp extends JFrame {
 
         return panel;
     }
-    
-    // ================= GALLERY =================
-    private JPanel galleryPage() {
 
+    private JPanel galleryPage() {
         JPanel main = new JPanel(new BorderLayout());
         main.setBackground(Color.WHITE);
 
-        // ===== TOP =====
         JPanel top = new JPanel(new FlowLayout(FlowLayout.CENTER));
         top.setBackground(Color.WHITE);
 
         JButton backBtn = new JButton("← Back");
         top.add(backBtn);
-
         top.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
+
         main.add(top, BorderLayout.NORTH);
 
-        // ===== GALLERY =====
         galleryPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 30));
         galleryPanel.setBackground(Color.WHITE);
 
@@ -256,36 +244,25 @@ public class ArtiumApp extends JFrame {
 
         main.add(scroll, BorderLayout.CENTER);
 
-        // Load data from DB
         refreshGallery("");
 
-        // Back button
         backBtn.addActionListener(e -> cl.show(mainPanel, "HOME"));
 
         return main;
     }
-    
-    
 
-    // ================= LOAD / SEARCH =================
     private void refreshGallery(String keyword) {
-
         galleryPanel.removeAll();
 
         try {
-
             PreparedStatement ps;
 
             if (keyword == null || keyword.trim().isEmpty()) {
-
                 ps = con.prepareStatement("SELECT * FROM artworks");
-
             } else {
-
-                String sql = "SELECT * FROM artworks WHERE name LIKE ? OR type LIKE ? OR artist LIKE ?";
+                String sql = "SELECT * FROM artworks WHERE LOWER(name) LIKE ? OR LOWER(type) LIKE ? OR LOWER(artist) LIKE ?";
                 ps = con.prepareStatement(sql);
-
-                String k = "%" + keyword + "%";
+                String k = "%" + keyword.toLowerCase() + "%";
                 ps.setString(1, k);
                 ps.setString(2, k);
                 ps.setString(3, k);
@@ -294,45 +271,24 @@ public class ArtiumApp extends JFrame {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-            	
-            	int id = rs.getInt("id");
-                
+                int id = rs.getInt("id");
                 String name = rs.getString("name");
                 String type = rs.getString("type");
                 String artist = rs.getString("artist");
                 String price = rs.getString("price");
                 String path = rs.getString("image_path");
 
-                ImageIcon icon = new ImageIcon(path);
+                ImageIcon icon;
+                File imgFile = new File(path);
+
+                if (imgFile.exists()) {
+                    icon = new ImageIcon(path);
+                } else {
+                    icon = new ImageIcon();
+                }
+
                 Image img = icon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
-
                 JLabel imgLabel = new JLabel(new ImageIcon(img));
-                
-             // Make cursor like clickable hand
-                imgLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-                // Click event
-                imgLabel.addMouseListener(new MouseAdapter() {
-                    public void mouseClicked(MouseEvent e) {
-
-                        // Create dialog (popup inside same app)
-                        JDialog dialog = new JDialog();
-                        dialog.setTitle("Artwork View");
-                        dialog.setSize(500, 500);
-                        dialog.setLocationRelativeTo(null);
-                        dialog.setModal(true); // optional but good
-
-                        // Load big image
-                        ImageIcon bigIcon = new ImageIcon(path);
-                        Image bigImg = bigIcon.getImage().getScaledInstance(450, 450, Image.SCALE_SMOOTH);
-
-                        JLabel bigImageLabel = new JLabel(new ImageIcon(bigImg));
-                        bigImageLabel.setHorizontalAlignment(JLabel.CENTER);
-
-                        dialog.add(bigImageLabel);
-                        dialog.setVisible(true);
-                    }
-                });
 
                 JPanel card = new JPanel();
                 card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
@@ -343,65 +299,17 @@ public class ArtiumApp extends JFrame {
                 JLabel typeLbl = new JLabel(type);
                 JLabel artistLbl = new JLabel(artist);
                 JLabel priceLbl = new JLabel("₹" + price);
-                
+
+                JButton updateBtn = new JButton("Update");
                 JButton deleteBtn = new JButton("Delete");
-                deleteBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-                
-                deleteBtn.addActionListener(e -> {
 
-                    int confirm = JOptionPane.showConfirmDialog(
-                            null,
-                            "Are you sure you want to delete this artwork?",
-                            "Confirm Delete",
-                            JOptionPane.YES_NO_OPTION
-                    );
-
-                    if (confirm == JOptionPane.YES_OPTION) {
-                        try {
-                            PreparedStatement psDel = con.prepareStatement(
-                                    "DELETE FROM artworks WHERE id=?"
-                            );
-
-                            psDel.setInt(1, id);   // using id from DB
-                            psDel.executeUpdate();
-
-                            JOptionPane.showMessageDialog(null, "Artwork Deleted!");
-
-                            refreshGallery("");   // reload gallery
-
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                });
-
-                // Center all text
-                nameLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-                typeLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-                artistLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-                priceLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
-                imgLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-                // Add spacing + styling
-                nameLbl.setFont(new Font("Arial", Font.BOLD, 14));
-                typeLbl.setFont(new Font("Arial", Font.PLAIN, 12));
-                artistLbl.setFont(new Font("Arial", Font.PLAIN, 12));
-                priceLbl.setFont(new Font("Arial", Font.BOLD, 13));
-
-                card.add(Box.createVerticalStrut(5));
                 card.add(imgLabel);
-                card.add(Box.createVerticalStrut(8));
                 card.add(nameLbl);
-                card.add(Box.createVerticalStrut(4));
                 card.add(typeLbl);
                 card.add(artistLbl);
-                card.add(Box.createVerticalStrut(4));
                 card.add(priceLbl);
-                
-                card.add(Box.createVerticalStrut(6));
+                card.add(updateBtn);
                 card.add(deleteBtn);
-
-                
 
                 galleryPanel.add(card);
             }
@@ -412,16 +320,702 @@ public class ArtiumApp extends JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    
-     // testing branch
-    //testing branch
-     // experiment change
-    
-        galleryPanel.revalidate();
-        galleryPanel.repaint();
+    }
+
+    private void loadMenuTypes(JPanel menuPanel) {
+        menuPanel.removeAll();
+
+        try {
+            PreparedStatement ps = con.prepareStatement("SELECT DISTINCT type FROM artworks");
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                String type = rs.getString("type");
+
+                JButton btn = new JButton(type);
+
+                btn.addActionListener(e -> {
+                    refreshGallery(type);
+                    cl.show(mainPanel, "GALLERY");
+                });
+
+                menuPanel.add(btn);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
         new ArtiumApp();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
